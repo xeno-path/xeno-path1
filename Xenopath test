@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pollinations AI Image Generator</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --background-color: #f5f6fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        #imageContainer {
+            margin-top: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        #generatedImage {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .param-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Image Generator</h1>
+        <div class="param-controls">
+            <div class="input-group">
+                <label for="width">Width:</label>
+                <input type="number" id="width" value="1024" min="256" max="2048">
+            </div>
+            <div class="input-group">
+                <label for="height">Height:</label>
+                <input type="number" id="height" value="1024" min="256" max="2048">
+            </div>
+            <div class="input-group">
+                <label for="quality">Quality:</label>
+                <select id="quality">
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="prompt">Image Prompt:</label>
+            <textarea id="prompt" rows="4" placeholder="Describe the image you want to generate..."></textarea>
+        </div>
+
+        <button onclick="generateImage()">Generate Image</button>
+        
+        <div class="loading" id="loading">Generating image... Please wait</div>
+        <div class="error" id="error"></div>
+        
+        <div id="imageContainer">
+            <img id="generatedImage" alt="Generated image">
+        </div>
+    </div>
+
+    <script>
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+            const width = document.getElementById('width').value;
+            const height = document.getElementById('height').value;
+            const quality = document.getElementById('quality').value;
+            
+            const imageContainer = document.getElementById('generatedImage');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+
+            // Reset state
+            imageContainer.style.display = 'none';
+            error.style.display = 'none';
+            loading.style.display = 'block';
+
+            if (!prompt) {
+                showError('Please enter a prompt');
+                return;
+            }
+
+            try {
+                const apiUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?` + new URLSearchParams({
+                    nologo: 'true',
+                    width,
+                    height,
+                    quality
+                });
+
+                imageContainer.src = apiUrl;
+                
+                // Wait for image to load
+                await new Promise((resolve, reject) => {
+                    imageContainer.onload = resolve;
+                    imageContainer.onerror = () => reject(new Error('Failed to load image'));
+                });
+
+                imageContainer.style.display = 'block';
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = `Error: ${message}`;
+            error.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
