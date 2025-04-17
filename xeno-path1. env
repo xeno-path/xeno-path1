@@ -1,0 +1,83 @@
+mkdir openai-backend
+cd openai-backend
+npm init -y
+npm install express cors dotenv openai
+OPENAI_API_KEY=sk-Bwh**************yTt
+PORT=3000
+ALLOWED_ORIGIN=https://xenopath.ruangriung.my.id
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const openaiRoutes = require("./routes/openai");
+
+dotenv.config();
+const app = express();
+
+// Izinkan hanya domain frontend Anda
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGIN,
+    methods: ["POST"]
+  })
+);
+
+app.use(express.json());
+app.use("/api/openai", openaiRoutes);
+
+app.listen(process.env.PORT, () => {
+  console.log(`Server berjalan di port ${process.env.PORT}`);
+});
+const express = require("express");
+const { Configuration, OpenAIApi } = require("openai");
+const router = express.Router();
+
+const config = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(config);
+
+router.post("/chat", async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+    });
+    res.json({ result: response.data.choices[0].message.content });
+  } catch (error) {
+    console.error("Error OpenAI:", error);
+    res.status(500).json({ error: "Terjadi kesalahan saat memproses permintaan" });
+  }
+});
+
+module.exports = router;
+async function tanyaKeAI(prompt) {
+  try {
+    const response = await fetch("http://localhost:3000/api/openai/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
+    const data = await response.json();
+    return data.result;
+  } catch (error) {
+    console.error("Error:", error);
+    return "Maaf, terjadi kesalahan.";
+  }
+}
+
+// Contoh penggunaan
+tanyaKeAI("Jelaskan teori relativitas Einstein").then((jawaban) => {
+  console.log(jawaban);
+});
+npm install express-rate-limit
+const rateLimit = require("express-rate-limit");
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 menit
+  max: 100, // Maksimal 100 permintaan per windowMs
+});
+app.use(limiter);
+node index.js
+curl -X POST http://localhost:3000/api/openai/chat \
+-H "Content-Type: application/json" \
+-d '{"prompt": "Apa ibu kota Indonesia?"}'
